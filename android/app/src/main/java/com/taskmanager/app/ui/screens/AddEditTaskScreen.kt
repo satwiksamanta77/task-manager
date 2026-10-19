@@ -17,13 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.taskmanager.app.ui.components.ErrorBanner
+import com.taskmanager.app.ui.components.LabelPickerChips
 import com.taskmanager.app.ui.components.PremiumTextField
 import com.taskmanager.app.ui.components.PremiumTopBar
+import com.taskmanager.app.ui.components.ProjectDropdown
 import com.taskmanager.app.ui.components.SectionLabel
 import com.taskmanager.app.ui.components.SegmentedControl
 import com.taskmanager.app.ui.theme.Bg
 import com.taskmanager.app.ui.theme.Iris
 import com.taskmanager.app.viewmodel.AddEditTaskViewModel
+
+private val recurrenceValues = listOf("none", "daily", "weekly", "monthly")
+private val recurrenceLabels = listOf("None", "Daily", "Weekly", "Monthly")
 
 @Composable
 fun AddEditTaskScreen(
@@ -35,6 +40,7 @@ fun AddEditTaskScreen(
     val priorities = listOf("low", "medium", "high")
     val priorityLabels = listOf("Low", "Medium", "High")
     val priorityIndex = priorities.indexOf(state.priority).coerceAtLeast(0)
+    val recurrenceIndex = recurrenceValues.indexOf(state.recurrence).coerceAtLeast(0)
 
     Scaffold(
         containerColor = Bg,
@@ -86,6 +92,22 @@ fun AddEditTaskScreen(
                 onSelect = { vm.onPriorityChange(priorities[it]) }
             )
             Spacer(modifier = Modifier.height(20.dp))
+            SectionLabel("Project")
+            Spacer(modifier = Modifier.height(8.dp))
+            ProjectDropdown(
+                projects = state.projects,
+                selectedId = state.projectId,
+                onSelect = vm::onProjectChange
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            SectionLabel("Repeat")
+            Spacer(modifier = Modifier.height(8.dp))
+            SegmentedControl(
+                options = recurrenceLabels,
+                selectedIndex = recurrenceIndex,
+                onSelect = { vm.onRecurrenceChange(recurrenceValues[it]) }
+            )
+            Spacer(modifier = Modifier.height(20.dp))
             SectionLabel("Due date")
             Spacer(modifier = Modifier.height(8.dp))
             PremiumTextField(
@@ -93,6 +115,16 @@ fun AddEditTaskScreen(
                 onValueChange = vm::onDueAtChange,
                 label = "2026-10-21T10:00:00Z"
             )
+            if (state.labels.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(20.dp))
+                SectionLabel("Labels")
+                Spacer(modifier = Modifier.height(8.dp))
+                LabelPickerChips(
+                    labels = state.labels,
+                    selectedIds = state.labelIds,
+                    onToggle = vm::toggleLabel
+                )
+            }
             state.error?.let { error ->
                 Spacer(modifier = Modifier.height(12.dp))
                 ErrorBanner(text = error)

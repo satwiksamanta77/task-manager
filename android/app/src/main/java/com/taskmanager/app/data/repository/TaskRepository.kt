@@ -7,6 +7,7 @@ import com.taskmanager.app.data.api.SubtaskDto
 import com.taskmanager.app.data.api.TaskDto
 import com.taskmanager.app.data.api.UpdateSubtaskRequest
 import com.taskmanager.app.data.api.UpdateTaskRequest
+import com.taskmanager.app.data.api.UpdateTaskResponse
 import com.taskmanager.app.data.api.unwrap
 import com.taskmanager.app.data.local.SessionManager
 
@@ -15,14 +16,22 @@ class TaskRepository(
     session: SessionManager
 ) : BaseRepository(session) {
 
-    suspend fun getTasks(status: String? = null): List<TaskDto> =
-        unwrap(api.getTasks(authHeader(), status)).tasks
+    suspend fun getTasks(
+        status: String? = null,
+        projectId: String? = null,
+        labelId: String? = null,
+        trashed: Boolean = false
+    ): List<TaskDto> =
+        unwrap(api.getTasks(authHeader(), status, projectId, labelId, trashed.takeIf { it })).tasks
 
     suspend fun createTask(
         title: String,
         description: String?,
         priority: String?,
-        dueAt: String?
+        dueAt: String?,
+        projectId: String? = null,
+        recurrence: String = "none",
+        labelIds: List<String> = emptyList()
     ): TaskDto = unwrap(
         api.createTask(
             authHeader(),
@@ -30,7 +39,10 @@ class TaskRepository(
                 title = title,
                 description = description?.ifBlank { null },
                 priority = priority,
-                due_at = dueAt?.ifBlank { null }
+                due_at = dueAt?.ifBlank { null },
+                project_id = projectId,
+                recurrence = recurrence.takeIf { it != "none" },
+                label_ids = labelIds.takeIf { it.isNotEmpty() }
             )
         )
     ).task
@@ -38,12 +50,15 @@ class TaskRepository(
     suspend fun getTask(id: String): TaskDto =
         unwrap(api.getTask(authHeader(), id)).task
 
-    suspend fun updateTask(id: String, body: UpdateTaskRequest): TaskDto =
-        unwrap(api.updateTask(authHeader(), id, body)).task
+    suspend fun updateTask(id: String, body: UpdateTaskRequest): UpdateTaskResponse =
+        unwrap(api.updateTask(authHeader(), id, body))
 
-    suspend fun deleteTask(id: String) {
-        unwrap(api.deleteTask(authHeader(), id))
+    suspend fun deleteTask(id: String, permanent: Boolean = false) {
+        unwrap(api.deleteTask(authHeader(), id, permanent.takeIf { it }))
     }
+
+    suspend fun restoreTask(id: String): TaskDto =
+        unwrap(api.restoreTask(authHeader(), id)).task
 
     suspend fun createSubtask(taskId: String, title: String): SubtaskDto =
         unwrap(api.createSubtask(authHeader(), taskId, CreateSubtaskRequest(title))).subtask

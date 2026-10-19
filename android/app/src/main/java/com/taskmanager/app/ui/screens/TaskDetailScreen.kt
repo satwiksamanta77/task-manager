@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.taskmanager.app.ui.screens
 
 import androidx.compose.foundation.layout.Box
@@ -40,11 +42,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.taskmanager.app.ui.components.DueChip
 import com.taskmanager.app.ui.components.EmptyState
 import com.taskmanager.app.ui.components.ErrorBanner
+import com.taskmanager.app.ui.components.LabelPill
 import com.taskmanager.app.ui.components.PremiumCard
 import com.taskmanager.app.ui.components.PremiumCheckbox
 import com.taskmanager.app.ui.components.PremiumTextField
 import com.taskmanager.app.ui.components.PremiumTopBar
 import com.taskmanager.app.ui.components.PriorityPill
+import com.taskmanager.app.ui.components.RecurrenceBadge
 import com.taskmanager.app.ui.components.SectionLabel
 import com.taskmanager.app.ui.theme.Bg
 import com.taskmanager.app.ui.theme.Danger
@@ -112,6 +116,14 @@ fun TaskDetailScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
+                                if (state.projectName != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = state.projectName,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = Iris
+                                    )
+                                }
                                 if (!task.description.isNullOrBlank()) {
                                     Spacer(modifier = Modifier.height(10.dp))
                                     Text(
@@ -126,6 +138,25 @@ fun TaskDetailScreen(
                                     if (!task.due_at.isNullOrBlank()) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         DueChip(iso = task.due_at)
+                                    }
+                                    RecurrenceBadge(
+                                        recurrence = task.recurrence,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
+                                if (task.labels.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    androidx.compose.foundation.layout.FlowRow(
+                                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                            6.dp
+                                        ),
+                                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                            6.dp
+                                        )
+                                    ) {
+                                        task.labels.forEach { label ->
+                                            LabelPill(label = label)
+                                        }
                                     }
                                 }
                             }
@@ -222,8 +253,8 @@ fun TaskDetailScreen(
         AlertDialog(
             onDismissRequest = { showDelete = false },
             containerColor = Surface,
-            title = { Text("Delete task?", color = Text) },
-            text = { Text("This will permanently delete the task and its subtasks.", color = Dim) },
+            title = { Text("Move to trash?", color = Text) },
+            text = { Text("You can restore this task from Trash later.", color = Dim) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -231,7 +262,7 @@ fun TaskDetailScreen(
                         vm.deleteTask(onBack)
                     }
                 ) {
-                    Text("Delete", color = Danger)
+                    Text("Move to trash", color = Danger)
                 }
             },
             dismissButton = {

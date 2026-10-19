@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.stickyHeader
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -105,7 +104,7 @@ fun ScheduleScreen(vm: ScheduleViewModel) {
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     grouped.forEach { (date, items) ->
-                        stickyHeader(key = "header-$date") {
+                        item(key = "header-$date") {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()

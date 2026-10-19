@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -24,10 +24,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,15 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.taskmanager.app.ui.components.EmptyState
 import com.taskmanager.app.ui.components.ErrorBanner
+import com.taskmanager.app.ui.components.FilterChipRow
 import com.taskmanager.app.ui.components.NoteCard
 import com.taskmanager.app.ui.components.PremiumTopBar
 import com.taskmanager.app.ui.components.SegmentedControl
 import com.taskmanager.app.ui.theme.Bg
-import com.taskmanager.app.ui.theme.Border
 import com.taskmanager.app.ui.theme.Dim
 import com.taskmanager.app.ui.theme.Iris
-import com.taskmanager.app.ui.theme.Surface2
-import com.taskmanager.app.ui.theme.Text
 import com.taskmanager.app.viewmodel.NotesViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -55,7 +50,9 @@ import com.taskmanager.app.viewmodel.NotesViewModel
 fun NotesScreen(
     vm: NotesViewModel,
     onOpen: (String) -> Unit,
-    onAdd: () -> Unit
+    onAdd: () -> Unit,
+    onSearch: () -> Unit,
+    onLabels: () -> Unit
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
 
@@ -79,6 +76,12 @@ fun NotesScreen(
                 title = "Notes",
                 subtitle = if (filtered.isEmpty()) null else "${filtered.size} notes",
                 actions = {
+                    IconButton(onClick = onSearch, modifier = Modifier.padding(end = 0.dp)) {
+                        Icon(Icons.Filled.Search, contentDescription = "Search", tint = Dim)
+                    }
+                    IconButton(onClick = onLabels, modifier = Modifier.padding(end = 0.dp)) {
+                        Icon(Icons.Filled.Label, contentDescription = "Labels", tint = Dim)
+                    }
                     IconButton(onClick = { vm.load() }, modifier = Modifier.padding(end = 4.dp)) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = Dim)
                     }
@@ -101,35 +104,24 @@ fun NotesScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = vm::onQueryChange,
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Dim) },
-                placeholder = { Text("Search notes", color = Dim) },
-                singleLine = true,
-                shape = RoundedCornerShape(50),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Iris,
-                    unfocusedBorderColor = Border,
-                    focusedTextColor = Text,
-                    unfocusedTextColor = Text,
-                    cursorColor = Iris,
-                    focusedContainerColor = Surface2.copy(alpha = 0.6f),
-                    unfocusedContainerColor = Surface2.copy(alpha = 0.6f)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
             SegmentedControl(
                 options = listOf("Notes", "Archived"),
                 selectedIndex = if (state.showArchived) 1 else 0,
                 onSelect = { vm.setShowArchived(it == 1) },
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .align(Alignment.CenterHorizontally)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            if (state.labels.isNotEmpty()) {
+                FilterChipRow(
+                    allLabel = "All labels",
+                    items = state.labels.map { it.id to it.name },
+                    selectedId = state.labelFilter,
+                    onSelect = vm::setLabelFilter,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             if (state.loading) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
@@ -167,7 +159,11 @@ fun NotesScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(filtered, key = { it.id }) { note ->
-                        NoteCard(note = note, onOpen = { onOpen(note.id) })
+                        NoteCard(
+                            note = note,
+                            onOpen = { onOpen(note.id) },
+                            checklistProgress = state.checklistProgress[note.id]
+                        )
                     }
                 }
             }

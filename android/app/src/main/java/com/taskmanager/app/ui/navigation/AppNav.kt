@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -48,20 +49,27 @@ import androidx.navigation.navArgument
 import com.taskmanager.app.data.api.ApiClient
 import com.taskmanager.app.data.local.SessionManager
 import com.taskmanager.app.data.repository.AuthRepository
+import com.taskmanager.app.data.repository.LabelRepository
 import com.taskmanager.app.data.repository.NoteRepository
+import com.taskmanager.app.data.repository.ProjectRepository
 import com.taskmanager.app.data.repository.ScheduleRepository
+import com.taskmanager.app.data.repository.SearchRepository
 import com.taskmanager.app.data.repository.TaskRepository
 import com.taskmanager.app.ui.components.LogoMark
 import com.taskmanager.app.ui.components.MeshBackground
 import com.taskmanager.app.ui.screens.AddEditTaskScreen
+import com.taskmanager.app.ui.screens.LabelsScreen
 import com.taskmanager.app.ui.screens.LoginScreen
 import com.taskmanager.app.ui.screens.NoteEditorScreen
 import com.taskmanager.app.ui.screens.NotesScreen
 import com.taskmanager.app.ui.screens.ProfileScreen
+import com.taskmanager.app.ui.screens.ProjectsScreen
 import com.taskmanager.app.ui.screens.RegisterScreen
 import com.taskmanager.app.ui.screens.ScheduleScreen
+import com.taskmanager.app.ui.screens.SearchScreen
 import com.taskmanager.app.ui.screens.TaskDetailScreen
 import com.taskmanager.app.ui.screens.TasksScreen
+import com.taskmanager.app.ui.screens.TrashScreen
 import com.taskmanager.app.ui.theme.Bg
 import com.taskmanager.app.ui.theme.Border
 import com.taskmanager.app.ui.theme.Dim
@@ -70,12 +78,16 @@ import com.taskmanager.app.ui.theme.Surface
 import com.taskmanager.app.ui.theme.Text
 import com.taskmanager.app.viewmodel.AddEditTaskViewModel
 import com.taskmanager.app.viewmodel.AuthViewModel
+import com.taskmanager.app.viewmodel.LabelsViewModel
 import com.taskmanager.app.viewmodel.NoteEditorViewModel
 import com.taskmanager.app.viewmodel.NotesViewModel
 import com.taskmanager.app.viewmodel.ProfileViewModel
+import com.taskmanager.app.viewmodel.ProjectsViewModel
 import com.taskmanager.app.viewmodel.ScheduleViewModel
+import com.taskmanager.app.viewmodel.SearchViewModel
 import com.taskmanager.app.viewmodel.TaskDetailViewModel
 import com.taskmanager.app.viewmodel.TasksViewModel
+import com.taskmanager.app.viewmodel.TrashViewModel
 import com.taskmanager.app.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.first
 
@@ -90,6 +102,9 @@ fun AppNav() {
     val taskRepo = remember { TaskRepository(api, session) }
     val noteRepo = remember { NoteRepository(api, session) }
     val scheduleRepo = remember { ScheduleRepository(api, session) }
+    val projectRepo = remember { ProjectRepository(api, session) }
+    val labelRepo = remember { LabelRepository(api, session) }
+    val searchRepo = remember { SearchRepository(api, session) }
     val navController = rememberNavController()
 
     NavHost(
@@ -163,7 +178,43 @@ fun AppNav() {
                 noteRepo = noteRepo,
                 scheduleRepo = scheduleRepo,
                 authRepo = authRepo,
-                session = session
+                session = session,
+                projectRepo = projectRepo,
+                labelRepo = labelRepo
+            )
+        }
+        composable("search") {
+            val vm: SearchViewModel =
+                viewModel(factory = viewModelFactory { SearchViewModel(searchRepo) })
+            SearchScreen(
+                vm = vm,
+                onBack = { navController.popBackStack() },
+                onOpenTask = { id -> navController.navigate("taskDetail/$id") },
+                onOpenNote = { id -> navController.navigate("noteEditor?noteId=$id") }
+            )
+        }
+        composable("projects") {
+            val vm: ProjectsViewModel =
+                viewModel(factory = viewModelFactory { ProjectsViewModel(projectRepo) })
+            ProjectsScreen(
+                vm = vm,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("labels") {
+            val vm: LabelsViewModel =
+                viewModel(factory = viewModelFactory { LabelsViewModel(labelRepo) })
+            LabelsScreen(
+                vm = vm,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("trash") {
+            val vm: TrashViewModel =
+                viewModel(factory = viewModelFactory { TrashViewModel(taskRepo, noteRepo) })
+            TrashScreen(
+                vm = vm,
+                onBack = { navController.popBackStack() }
             )
         }
         composable(
@@ -172,7 +223,7 @@ fun AppNav() {
         ) { entry ->
             val taskId = entry.arguments?.getString("taskId").orEmpty()
             val vm: TaskDetailViewModel =
-                viewModel(factory = viewModelFactory { TaskDetailViewModel(taskId, taskRepo) })
+                viewModel(factory = viewModelFactory { TaskDetailViewModel(taskId, taskRepo, projectRepo) })
             TaskDetailScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
@@ -181,7 +232,7 @@ fun AppNav() {
         }
         composable("addTask") {
             val vm: AddEditTaskViewModel =
-                viewModel(factory = viewModelFactory { AddEditTaskViewModel(null, taskRepo) })
+                viewModel(factory = viewModelFactory { AddEditTaskViewModel(null, taskRepo, projectRepo, labelRepo) })
             AddEditTaskScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
@@ -194,7 +245,7 @@ fun AppNav() {
         ) { entry ->
             val taskId = entry.arguments?.getString("taskId").orEmpty()
             val vm: AddEditTaskViewModel =
-                viewModel(factory = viewModelFactory { AddEditTaskViewModel(taskId, taskRepo) })
+                viewModel(factory = viewModelFactory { AddEditTaskViewModel(taskId, taskRepo, projectRepo, labelRepo) })
             AddEditTaskScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
@@ -213,7 +264,7 @@ fun AppNav() {
         ) { entry ->
             val noteId = entry.arguments?.getString("noteId")
             val vm: NoteEditorViewModel =
-                viewModel(factory = viewModelFactory { NoteEditorViewModel(noteId, noteRepo) })
+                viewModel(factory = viewModelFactory { NoteEditorViewModel(noteId, noteRepo, labelRepo) })
             NoteEditorScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
@@ -263,7 +314,9 @@ private fun MainScaffold(
     noteRepo: NoteRepository,
     scheduleRepo: ScheduleRepository,
     authRepo: AuthRepository,
-    session: SessionManager
+    session: SessionManager,
+    projectRepo: ProjectRepository,
+    labelRepo: LabelRepository
 ) {
     val tabs = listOf(
         Tab("tabs/tasks", "Tasks", Icons.Filled.List),
@@ -327,20 +380,24 @@ private fun MainScaffold(
         ) {
             composable("tabs/tasks") {
                 val vm: TasksViewModel =
-                    viewModel(factory = viewModelFactory { TasksViewModel(taskRepo) })
+                    viewModel(factory = viewModelFactory { TasksViewModel(taskRepo, projectRepo, labelRepo) })
                 TasksScreen(
                     vm = vm,
                     onAdd = { navController.navigate("addTask") },
-                    onOpen = { id -> navController.navigate("taskDetail/$id") }
+                    onOpen = { id -> navController.navigate("taskDetail/$id") },
+                    onSearch = { navController.navigate("search") },
+                    onProjects = { navController.navigate("projects") }
                 )
             }
             composable("tabs/notes") {
                 val vm: NotesViewModel =
-                    viewModel(factory = viewModelFactory { NotesViewModel(noteRepo) })
+                    viewModel(factory = viewModelFactory { NotesViewModel(noteRepo, labelRepo) })
                 NotesScreen(
                     vm = vm,
                     onOpen = { id -> navController.navigate("noteEditor?noteId=$id") },
-                    onAdd = { navController.navigate("noteEditor") }
+                    onAdd = { navController.navigate("noteEditor") },
+                    onSearch = { navController.navigate("search") },
+                    onLabels = { navController.navigate("labels") }
                 )
             }
             composable("tabs/schedule") {
@@ -357,7 +414,8 @@ private fun MainScaffold(
                         navController.navigate("login") {
                             popUpTo("main") { inclusive = true }
                         }
-                    }
+                    },
+                    onOpenTrash = { navController.navigate("trash") }
                 )
             }
         }

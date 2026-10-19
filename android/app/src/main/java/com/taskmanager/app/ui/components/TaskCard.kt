@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.taskmanager.app.ui.components
 
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.taskmanager.app.data.api.ProjectDto
 import com.taskmanager.app.data.api.TaskDto
 import com.taskmanager.app.ui.theme.Dim
 import com.taskmanager.app.ui.theme.Iris
@@ -28,7 +31,8 @@ import com.taskmanager.app.ui.theme.soft
 fun TaskCard(
     task: TaskDto,
     onToggle: () -> Unit,
-    onOpen: () -> Unit
+    onOpen: () -> Unit,
+    project: ProjectDto? = null
 ) {
     val done = task.status == "done"
     PremiumCard(
@@ -51,12 +55,35 @@ fun TaskCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (project != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = project.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Iris
+                    )
+                }
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     PriorityPill(priority = task.priority)
                     if (!task.due_at.isNullOrBlank()) {
                         Spacer(modifier = Modifier.width(8.dp))
                         DueChip(iso = task.due_at)
+                    }
+                    RecurrenceBadge(
+                        recurrence = task.recurrence,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+                if (task.labels.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.foundation.layout.FlowRow(
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
+                    ) {
+                        task.labels.forEach { label ->
+                            LabelPill(label = label)
+                        }
                     }
                 }
                 val subtasks = task.subtasks

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.taskmanager.app.data.api.SubtaskDto
 import com.taskmanager.app.data.api.TaskDto
 import com.taskmanager.app.data.api.UpdateTaskRequest
+import com.taskmanager.app.data.repository.ProjectRepository
 import com.taskmanager.app.data.repository.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,12 +15,14 @@ import kotlinx.coroutines.launch
 data class TaskDetailUiState(
     val loading: Boolean = false,
     val task: TaskDto? = null,
+    val projectName: String? = null,
     val error: String? = null
 )
 
 class TaskDetailViewModel(
     private val taskId: String,
-    private val repo: TaskRepository
+    private val repo: TaskRepository,
+    private val projectRepo: ProjectRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TaskDetailUiState(loading = true))
@@ -34,7 +37,14 @@ class TaskDetailViewModel(
             _uiState.value = _uiState.value.copy(loading = true, error = null)
             try {
                 val task = repo.getTask(taskId)
-                _uiState.value = TaskDetailUiState(task = task)
+                val projectName = task.project_id?.let { pid ->
+                    try {
+                        projectRepo?.getProjects()?.firstOrNull { it.id == pid }?.name
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                _uiState.value = TaskDetailUiState(task = task, projectName = projectName)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     loading = false,

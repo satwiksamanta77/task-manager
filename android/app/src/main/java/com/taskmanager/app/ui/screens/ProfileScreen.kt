@@ -4,15 +4,19 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,7 +48,8 @@ import com.taskmanager.app.viewmodel.ProfileViewModel
 @Composable
 fun ProfileScreen(
     vm: ProfileViewModel,
-    onLoggedOut: () -> Unit
+    onLoggedOut: () -> Unit,
+    onOpenTrash: () -> Unit
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
 
@@ -88,6 +93,41 @@ fun ProfileScreen(
                         color = Dim
                     )
                     Spacer(modifier = Modifier.height(28.dp))
+                    PremiumCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onOpenTrash
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(18.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Filled.DeleteOutline,
+                                contentDescription = null,
+                                tint = Dim
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Trash",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Text
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Restore or permanently delete items.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Dim
+                                )
+                            }
+                            Icon(
+                                Icons.Filled.ChevronRight,
+                                contentDescription = null,
+                                tint = Dim
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
                     PremiumCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(18.dp)) {
                             Text(
