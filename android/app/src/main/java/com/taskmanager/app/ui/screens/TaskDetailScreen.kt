@@ -116,10 +116,11 @@ fun TaskDetailScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
-                                if (state.projectName != null) {
+                                val projectName = state.projectName
+                                if (projectName != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = state.projectName,
+                                        text = projectName,
                                         style = MaterialTheme.typography.labelLarge,
                                         color = Iris
                                     )
