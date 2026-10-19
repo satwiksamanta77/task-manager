@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL, color TEXT, position INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS labels (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL, color TEXT, created_at TEXT NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_labels_user_name ON labels(user_id, name);
+CREATE TABLE IF NOT EXISTS task_labels (task_id TEXT NOT NULL, label_id TEXT NOT NULL, PRIMARY KEY (task_id, label_id));
+CREATE TABLE IF NOT EXISTS note_labels (note_id TEXT NOT NULL, label_id TEXT NOT NULL, PRIMARY KEY (note_id, label_id));
+CREATE TABLE IF NOT EXISTS note_checklist_items (id TEXT PRIMARY KEY, note_id TEXT NOT NULL, text TEXT NOT NULL, checked INTEGER NOT NULL DEFAULT 0, position INTEGER NOT NULL DEFAULT 0);
+ALTER TABLE tasks ADD COLUMN project_id TEXT;
+ALTER TABLE tasks ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE tasks ADD COLUMN deleted_at TEXT;
+ALTER TABLE notes ADD COLUMN deleted_at TEXT;
+CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_task_labels_label ON task_labels(label_id);
+CREATE INDEX IF NOT EXISTS idx_note_labels_label ON note_labels(label_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_note ON note_checklist_items(note_id);

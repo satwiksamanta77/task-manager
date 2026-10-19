@@ -33,7 +33,7 @@ scheduleRoutes.get('/upcoming', async (c) => {
   const rows = await all<UpcomingRow>(
     c.env.DB,
     `SELECT id, title, due_at, reminder_at, priority FROM tasks
-     WHERE user_id = ? AND status = 'todo'
+     WHERE user_id = ? AND status = 'todo' AND deleted_at IS NULL
        AND ((due_at IS NOT NULL AND due_at >= ? AND due_at <= ?)
          OR (reminder_at IS NOT NULL AND reminder_at >= ? AND reminder_at <= ?))`,
     userId,

@@ -37,7 +37,7 @@ export async function readJson<T>(c: Context): Promise<{ ok: true; body: T } | {
   }
 }
 
-/** Full D1 schema. Kept in sync with migrations/0001_init.sql. */
+/** Full D1 schema. Kept in sync with migrations/0001_init.sql, 0002_rate_limits.sql, 0003_features.sql. */
 export const CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -62,6 +62,9 @@ CREATE TABLE IF NOT EXISTS tasks (
   priority TEXT NOT NULL DEFAULT 'medium',
   due_at TEXT,
   reminder_at TEXT,
+  project_id TEXT,
+  recurrence TEXT NOT NULL DEFAULT 'none',
+  deleted_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -82,6 +85,7 @@ CREATE TABLE IF NOT EXISTS notes (
   color TEXT NOT NULL DEFAULT '#FFF7AE',
   pinned INTEGER NOT NULL DEFAULT 0,
   archived INTEGER NOT NULL DEFAULT 0,
+  deleted_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -95,4 +99,43 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   count INTEGER NOT NULL DEFAULT 0,
   window_start TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS projects (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  color TEXT,
+  position INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS labels (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  color TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_labels_user_name ON labels(user_id, name);
+CREATE TABLE IF NOT EXISTS task_labels (
+  task_id TEXT NOT NULL,
+  label_id TEXT NOT NULL,
+  PRIMARY KEY (task_id, label_id)
+);
+CREATE TABLE IF NOT EXISTS note_labels (
+  note_id TEXT NOT NULL,
+  label_id TEXT NOT NULL,
+  PRIMARY KEY (note_id, label_id)
+);
+CREATE TABLE IF NOT EXISTS note_checklist_items (
+  id TEXT PRIMARY KEY,
+  note_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  checked INTEGER NOT NULL DEFAULT 0,
+  position INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_task_labels_label ON task_labels(label_id);
+CREATE INDEX IF NOT EXISTS idx_note_labels_label ON note_labels(label_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_note ON note_checklist_items(note_id);
 `;

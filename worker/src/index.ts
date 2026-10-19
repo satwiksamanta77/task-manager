@@ -5,6 +5,9 @@ import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth';
 import { subtaskRoutes, taskRoutes } from './routes/tasks';
 import { notesRoutes } from './routes/notes';
 import { scheduleRoutes } from './routes/schedule';
+import { projectRoutes } from './routes/projects';
+import { labelRoutes } from './routes/labels';
+import { searchRoutes } from './routes/search';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -24,6 +27,9 @@ app.route('/api/tasks', taskRoutes);
 app.route('/api', subtaskRoutes);
 app.route('/api/notes', notesRoutes);
 app.route('/api/schedule', scheduleRoutes);
+app.route('/api/projects', projectRoutes);
+app.route('/api/labels', labelRoutes);
+app.route('/api/search', searchRoutes);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 
