@@ -22,10 +22,22 @@ android/   # Kotlin/Compose Android app (package com.taskmanager.app)
 worker/    # Cloudflare Worker API (Hono + D1)
   src/         # index, auth, routes (auth/tasks/notes/schedule), db helpers
   migrations/  # D1 schema (0001_init.sql)
+web/       # Cloudflare Pages web app — same features, same login (vanilla JS SPA)
 .github/   # release workflow: builds APK on v* tags
 ```
 
 The API both sides speak is documented in [`api-contract.md`](api-contract.md).
+
+## Web app
+
+The browser version lives in `web/` and is deployed to Cloudflare Pages
+(`taskmanager-web.pages.dev`). Same login, same features as the Android app —
+tasks, subtasks, schedule, Keep-style notes. To redeploy:
+
+```bash
+cd web
+npx wrangler pages deploy . --project-name=taskmanager-web --branch=main
+```
 
 ## Backend setup
 
