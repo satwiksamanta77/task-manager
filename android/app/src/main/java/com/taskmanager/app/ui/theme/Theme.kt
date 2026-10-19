@@ -1,44 +1,43 @@
 package com.taskmanager.app.ui.theme
 
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Primary,
-    onPrimary = Background,
-    secondary = Secondary,
-    onSecondary = Background,
-    tertiary = Tertiary,
-    onTertiary = Background,
-    error = Error,
-    onError = Background,
-    background = Background,
-    onBackground = OnBackground,
+    primary = Iris,
+    onPrimary = Color.White,
+    primaryContainer = IrisDeep,
+    onPrimaryContainer = Color.White,
+    secondary = Cyan,
+    onSecondary = Bg,
+    tertiary = Warning,
+    onTertiary = Bg,
+    error = Danger,
+    onError = Color.White,
+    background = Bg,
+    onBackground = Text,
     surface = Surface,
-    onSurface = OnSurface,
-    surfaceVariant = SurfaceVariant,
-    onSurfaceVariant = OnSurfaceVariant,
-    outline = Border
+    onSurface = Text,
+    surfaceVariant = Surface2,
+    onSurfaceVariant = Dim,
+    surfaceContainer = Surface,
+    surfaceContainerHigh = Surface2,
+    surfaceContainerHighest = Surface2,
+    outline = Border,
+    outlineVariant = Border
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = LightPrimary,
-    onPrimary = LightSurface,
-    secondary = LightSecondary,
-    onSecondary = LightSurface,
-    tertiary = LightTertiary,
-    onTertiary = LightSurface,
-    error = LightError,
-    onError = LightSurface,
-    background = LightBackground,
-    onBackground = LightOnBackground,
-    surface = LightSurface,
-    onSurface = LightOnSurface,
-    surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = LightOnSurfaceVariant,
-    outline = LightBorder
+private val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp)
 )
 
 @Composable
@@ -46,10 +45,12 @@ fun TaskManagerTheme(
     darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    // Premium dark-first experience; the light scheme is intentionally not
+    // offered so the brand stays consistent everywhere.
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = DarkColorScheme,
         typography = Typography,
+        shapes = AppShapes,
         content = content
     )
 }

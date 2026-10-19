@@ -7,28 +7,30 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.taskmanager.app.ui.theme.Error
-import com.taskmanager.app.ui.theme.Secondary
-import com.taskmanager.app.ui.theme.Tertiary
+import com.taskmanager.app.ui.theme.Cyan
+import com.taskmanager.app.ui.theme.Danger
+import com.taskmanager.app.ui.theme.Warning
+import com.taskmanager.app.ui.theme.soft
 import com.taskmanager.app.ui.util.capitalizeFirst
 
 @Composable
 fun PriorityPill(priority: String) {
-    val color = when (priority.lowercase()) {
-        "high" -> Error
-        "medium" -> Tertiary
-        else -> Secondary
+    val color: Color = when (priority.lowercase()) {
+        "high" -> Danger
+        "medium" -> Warning
+        else -> Cyan
     }
     Surface(
-        color = color.copy(alpha = 0.16f),
+        color = color.soft(0.15f),
         shape = RoundedCornerShape(50)
     ) {
         Text(
             text = capitalizeFirst(priority),
             color = color,
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
         )
     }
 }

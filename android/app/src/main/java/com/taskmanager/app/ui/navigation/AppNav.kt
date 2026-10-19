@@ -1,18 +1,30 @@
 package com.taskmanager.app.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,8 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -37,6 +51,8 @@ import com.taskmanager.app.data.repository.AuthRepository
 import com.taskmanager.app.data.repository.NoteRepository
 import com.taskmanager.app.data.repository.ScheduleRepository
 import com.taskmanager.app.data.repository.TaskRepository
+import com.taskmanager.app.ui.components.LogoMark
+import com.taskmanager.app.ui.components.MeshBackground
 import com.taskmanager.app.ui.screens.AddEditTaskScreen
 import com.taskmanager.app.ui.screens.LoginScreen
 import com.taskmanager.app.ui.screens.NoteEditorScreen
@@ -46,6 +62,12 @@ import com.taskmanager.app.ui.screens.RegisterScreen
 import com.taskmanager.app.ui.screens.ScheduleScreen
 import com.taskmanager.app.ui.screens.TaskDetailScreen
 import com.taskmanager.app.ui.screens.TasksScreen
+import com.taskmanager.app.ui.theme.Bg
+import com.taskmanager.app.ui.theme.Border
+import com.taskmanager.app.ui.theme.Dim
+import com.taskmanager.app.ui.theme.Iris
+import com.taskmanager.app.ui.theme.Surface
+import com.taskmanager.app.ui.theme.Text
 import com.taskmanager.app.viewmodel.AddEditTaskViewModel
 import com.taskmanager.app.viewmodel.AuthViewModel
 import com.taskmanager.app.viewmodel.NoteEditorViewModel
@@ -56,6 +78,8 @@ import com.taskmanager.app.viewmodel.TaskDetailViewModel
 import com.taskmanager.app.viewmodel.TasksViewModel
 import com.taskmanager.app.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.first
+
+private const val TRANSITION_MS = 280
 
 @Composable
 fun AppNav() {
@@ -68,7 +92,34 @@ fun AppNav() {
     val scheduleRepo = remember { ScheduleRepository(api, session) }
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "splash") {
+    NavHost(
+        navController = navController,
+        startDestination = "splash",
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it / 5 },
+                animationSpec = tween(TRANSITION_MS)
+            ) + fadeIn(tween(TRANSITION_MS))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -it / 5 },
+                animationSpec = tween(TRANSITION_MS)
+            ) + fadeOut(tween(TRANSITION_MS))
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it / 5 },
+                animationSpec = tween(TRANSITION_MS)
+            ) + fadeIn(tween(TRANSITION_MS))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it / 5 },
+                animationSpec = tween(TRANSITION_MS)
+            ) + fadeOut(tween(TRANSITION_MS))
+        }
+    ) {
         composable("splash") {
             SplashScreen(
                 session = session,
@@ -178,8 +229,27 @@ private fun SplashScreen(session: SessionManager, onDecide: (String) -> Unit) {
         val token = session.tokenFlow.first()
         onDecide(if (token.isNullOrBlank()) "login" else "main")
     }
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+    Box(modifier = Modifier.fillMaxSize()) {
+        MeshBackground(modifier = Modifier.fillMaxSize())
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            LogoMark(size = 88.dp, iconSize = 44.dp)
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "TaskManager",
+                style = MaterialTheme.typography.displaySmall,
+                color = Text
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Tasks · Notes · Schedule",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Dim
+            )
+        }
     }
 }
 
@@ -204,23 +274,48 @@ private fun MainScaffold(
     val tabNav = rememberNavController()
 
     Scaffold(
+        containerColor = Bg,
         bottomBar = {
-            NavigationBar {
-                val current by tabNav.currentBackStackEntryAsState()
-                val currentRoute = current?.destination?.route
-                tabs.forEach { tab ->
-                    NavigationBarItem(
-                        selected = currentRoute == tab.route,
-                        onClick = {
-                            tabNav.navigate(tab.route) {
-                                popUpTo(tabNav.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label) }
-                    )
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Border)
+                )
+                NavigationBar(
+                    containerColor = Surface,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.navigationBarsPadding()
+                ) {
+                    val current by tabNav.currentBackStackEntryAsState()
+                    val currentRoute = current?.destination?.route
+                    tabs.forEach { tab ->
+                        NavigationBarItem(
+                            selected = currentRoute == tab.route,
+                            onClick = {
+                                tabNav.navigate(tab.route) {
+                                    popUpTo(tabNav.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(tab.icon, contentDescription = tab.label) },
+                            label = {
+                                Text(
+                                    tab.label,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = Text,
+                                unselectedIconColor = Dim,
+                                unselectedTextColor = Dim,
+                                indicatorColor = Iris.copy(alpha = 0.22f)
+                            )
+                        )
+                    }
                 }
             }
         }
