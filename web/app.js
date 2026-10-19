@@ -59,12 +59,31 @@ function isOverdue(iso) {
   return new Date(iso).getTime() < Date.now();
 }
 
-function toast(msg) {
+function toast(msg, kind) {
+  kind = kind || 'info';
   var el = document.getElementById('toast');
-  el.textContent = msg;
+  var icon = kind === 'ok' ? ICONS.ok : kind === 'err' ? ICONS.alert : ICONS.info;
+  el.innerHTML = '<span class="toast-icon ' + kind + '">' + icon + '</span><span>' + esc(msg) + '</span>';
+  el.className = 'toast show ' + kind;
   el.hidden = false;
   clearTimeout(toast._t);
-  toast._t = setTimeout(function () { el.hidden = true; }, 3200);
+  toast._t = setTimeout(function () {
+    el.classList.remove('show');
+    setTimeout(function () { el.hidden = true; }, 260);
+  }, 3200);
+}
+
+/* skeleton shimmer blocks while content loads */
+function skel(n, cls) {
+  var out = '';
+  for (var i = 0; i < n; i++) out += '<div class="skel ' + cls + '"></div>';
+  return out;
+}
+
+/* illustrated empty state — no emoji */
+function emptyHtml(icon, title, copy, extra) {
+  return '<div class="empty"><div class="empty-ill">' + icon + '</div>' +
+    '<h3>' + esc(title) + '</h3><p>' + esc(copy) + '</p>' + (extra || '') + '</div>';
 }
 
 function getToken() { return localStorage.getItem(TOKEN_KEY); }
@@ -110,7 +129,19 @@ var ICONS = {
   tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="m8 12 3 3 6-6"/></svg>',
   notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/><path d="M15 3v6h6"/></svg>',
   schedule: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
-  profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>'
+  profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>',
+  check: '<svg class="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  mark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.8-3.8"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10.5h18"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2.5"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 7 3 3v2H5v-2l3-3z"/><path d="M12 16v5"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2m3 0-.8 12.2a1 1 0 0 1-1 .8H8.8a1 1 0 0 1-1-.8L7 7"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg>',
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5.5"/></svg>'
 };
 
 var NAV = [
@@ -129,7 +160,7 @@ function navHtml(active) {
 
 function shell(active, content) {
   return '<div class="layout">' +
-    '<aside class="sidenav"><div class="brand"><span class="brand-mark">✓</span>TaskManager</div>' +
+    '<aside class="sidenav"><div class="brand-lockup"><span class="brand-mark">' + ICONS.mark + '</span><span class="brand-name">TaskManager</span></div>' +
     '<nav>' + navHtml(active) + '</nav></aside>' +
     '<div class="main"><main class="container">' + content + '</main></div>' +
     '<nav class="bottomnav">' + navHtml(active) + '</nav>' +
@@ -137,10 +168,22 @@ function shell(active, content) {
 }
 
 function authShell(title, subtitle, bodyHtml) {
-  return '<div class="auth-wrap"><div class="auth-card">' +
-    '<div class="auth-header"><h1>' + esc(title) + '</h1><p>' + esc(subtitle) + '</p></div>' +
-    '<div class="auth-body">' + bodyHtml + '</div>' +
-    '</div></div>';
+  return '<div class="auth">' +
+    '<aside class="auth-brand"><div class="mesh" aria-hidden="true"></div>' +
+    '<div class="auth-brand-inner">' +
+    '<div class="brand-lockup"><span class="brand-mark">' + ICONS.mark + '</span>' +
+    '<span class="brand-name">TaskManager</span></div>' +
+    '<h1>Every task, note and deadline.<br><span>One calm place.</span></h1>' +
+    '<p class="lede">Tasks with subtasks, Keep-style notes and a smart schedule — synced instantly across your devices.</p>' +
+    '<ul class="feat">' +
+    '<li><span class="fi">' + ICONS.tasks + '</span><div><strong>Tasks &amp; subtasks</strong><span>Priorities, due dates and checklists</span></div></li>' +
+    '<li><span class="fi">' + ICONS.notes + '</span><div><strong>Keep-style notes</strong><span>Colored cards, pinning and archive</span></div></li>' +
+    '<li><span class="fi">' + ICONS.schedule + '</span><div><strong>Smart schedule</strong><span>Everything due, grouped by day</span></div></li>' +
+    '</ul></div></aside>' +
+    '<div class="auth-main"><div class="auth-card">' +
+    '<h2>' + esc(title) + '</h2><p class="sub">' + esc(subtitle) + '</p>' +
+    bodyHtml +
+    '</div></div></div>';
 }
 
 function mount(html) {
@@ -179,8 +222,8 @@ function router() {
   if (!match.pub && !token) { location.hash = '#/login'; return; }
   if (match.pub && token) { location.hash = '#/tasks'; return; }
   match.view.apply(null, params.map(decodeURIComponent)).catch(function (e) {
-    if (e instanceof ApiError) toast(e.message);
-    else { console.error(e); toast('Something went wrong.'); }
+    if (e instanceof ApiError) toast(e.message, 'err');
+    else { console.error(e); toast('Something went wrong.', 'err'); }
   });
 }
 
@@ -272,12 +315,13 @@ function priorityPill(p) {
 function taskRow(t) {
   var due = t.due_at ? fmtDate(t.due_at) : '';
   var overdue = t.status !== 'done' && isOverdue(t.due_at);
-  return '<div class="task-row' + (t.status === 'done' ? ' done' : '') + '" data-id="' + esc(t.id) + '">' +
-    '<input type="checkbox" class="checkbox" data-toggle="' + esc(t.id) + '"' +
-      (t.status === 'done' ? ' checked' : '') + ' aria-label="Mark done">' +
+  var done = t.status === 'done';
+  return '<div class="task-row' + (done ? ' done' : '') + '" data-id="' + esc(t.id) + '">' +
+    '<button type="button" class="checkbox" data-toggle="' + esc(t.id) + '" aria-pressed="' + done + '"' +
+    ' aria-label="' + (done ? 'Mark as to do' : 'Mark as done') + '">' + ICONS.check + '</button>' +
     '<div class="task-main"><div class="task-title">' + esc(t.title) + '</div>' +
     '<div class="task-meta">' + priorityPill(t.priority) +
-    (due ? '<span class="due' + (overdue ? ' overdue' : '') + '">📅 ' + esc(due) + '</span>' : '') +
+    (due ? '<span class="due' + (overdue ? ' overdue' : '') + '">' + ICONS.cal + esc(due) + '</span>' : '') +
     '</div></div></div>';
 }
 
@@ -288,15 +332,18 @@ function TasksView() {
     TASK_FILTERS.map(function (f) {
       return '<button class="chip' + (f.id === taskFilter ? ' active' : '') + '" data-f="' + f.id + '">' + f.label + '</button>';
     }).join('') + '</div>' +
-    '<div class="list" id="list"><div class="empty">Loading…</div></div>' +
-    '<button class="fab" id="fab" aria-label="Add task">+</button>'));
+    '<div class="list" id="list">' + skel(4, 'skel-row') + '</div>' +
+    '<button class="fab" id="fab" aria-label="Add task">' + ICONS.plus + '</button>'));
 
   function load() {
     var q = taskFilter === 'all' ? '' : '?status=' + taskFilter;
     return api('/tasks' + q).then(function (data) {
       var list = document.getElementById('list');
       if (!data.tasks.length) {
-        list.innerHTML = '<div class="empty"><span class="big">✅</span>Nothing here yet.<br>Tap + to add your first task.</div>';
+        list.innerHTML = emptyHtml(ICONS.tasks, 'All clear',
+          taskFilter === 'done'
+            ? 'Nothing completed yet. Finish a task and it will show up here.'
+            : 'No tasks here. Tap + to capture your first one — due dates and subtasks included.');
         return;
       }
       list.innerHTML = data.tasks.map(taskRow).join('');
@@ -310,7 +357,7 @@ function TasksView() {
     document.querySelectorAll('#filters .chip').forEach(function (c) {
       c.classList.toggle('active', c.getAttribute('data-f') === taskFilter);
     });
-    load().catch(function (err) { toast(err.message); });
+    load().catch(function (err) { toast(err.message, 'err'); });
   });
 
   document.getElementById('list').addEventListener('click', function (e) {
@@ -318,10 +365,12 @@ function TasksView() {
     if (toggle) {
       e.stopPropagation();
       var id = toggle.getAttribute('data-toggle');
-      var done = toggle.checked;
+      var done = toggle.getAttribute('aria-pressed') !== 'true';
+      toggle.setAttribute('aria-pressed', done ? 'true' : 'false');
+      toggle.setAttribute('aria-label', done ? 'Mark as to do' : 'Mark as done');
       api('/tasks/' + encodeURIComponent(id), {
         method: 'PUT', body: { status: done ? 'done' : 'todo' }
-      }).then(load).catch(function (err) { toast(err.message); load(); });
+      }).then(load).catch(function (err) { toast(err.message, 'err'); load(); });
       return;
     }
     var row = e.target.closest('.task-row');
@@ -384,7 +433,7 @@ function TaskNewView() {
 
 function TaskDetailView(id) {
   mount(shell('tasks', '<div class="page-head"><h2>Task <span class="grad-text">details</span></h2></div>' +
-    '<div class="card"><div class="empty">Loading…</div></div>'));
+    '<div class="card">' + skel(5, 'skel-line') + '</div>'));
 
   return api('/tasks/' + encodeURIComponent(id)).then(function (data) {
     var t = data.task;
@@ -415,9 +464,10 @@ function TaskDetailView(id) {
       '<div class="section-title">Subtasks (' + subs.length + ')</div>' +
       '<div class="subtask-list" id="subs">' +
       subs.map(function (s) {
-        return '<div class="subtask-row"><input type="checkbox" class="checkbox" data-sub="' + esc(s.id) + '"' +
-          (s.done ? ' checked' : '') + '><span class="' + (s.done ? 'done' : '') + '">' + esc(s.title) + '</span>' +
-          '<button class="icon-btn" data-delsub="' + esc(s.id) + '" aria-label="Delete subtask">×</button></div>';
+        return '<div class="subtask-row"><button type="button" class="checkbox" data-sub="' + esc(s.id) + '"' +
+          ' aria-pressed="' + !!s.done + '" aria-label="Toggle subtask">' + ICONS.check + '</button>' +
+          '<span class="' + (s.done ? 'done' : '') + '">' + esc(s.title) + '</span>' +
+          '<button class="icon-btn" data-delsub="' + esc(s.id) + '" aria-label="Delete subtask">' + ICONS.x + '</button></div>';
       }).join('') + '</div>' +
       '<div class="add-row" style="margin-top:10px"><input id="newsub" type="text" placeholder="Add a subtask…">' +
       '<button class="btn btn-ghost btn-sm" id="addsub">Add</button></div>' +
@@ -446,7 +496,7 @@ function TaskDetailView(id) {
           due_at: fromLocalInput(document.getElementById('due').value),
           reminder_at: fromLocalInput(document.getElementById('rem').value)
         }
-      }).then(function () { toast('Saved.'); reload(); })
+      }).then(function () { toast('Saved.', 'ok'); reload(); })
         .catch(function (e) {
           document.getElementById('err').innerHTML = errBanner(e.message);
           btn.disabled = false;
@@ -456,15 +506,17 @@ function TaskDetailView(id) {
     document.getElementById('subs').addEventListener('click', function (e) {
       var tg = e.target.closest('[data-sub]');
       if (tg) {
+        var done = tg.getAttribute('aria-pressed') !== 'true';
+        tg.setAttribute('aria-pressed', done ? 'true' : 'false');
         api('/subtasks/' + encodeURIComponent(tg.getAttribute('data-sub')), {
-          method: 'PUT', body: { done: tg.checked }
-        }).then(reload).catch(function (err) { toast(err.message); });
+          method: 'PUT', body: { done: done }
+        }).then(reload).catch(function (err) { toast(err.message, 'err'); });
         return;
       }
       var del = e.target.closest('[data-delsub]');
       if (del && confirm('Delete this subtask?')) {
         api('/subtasks/' + encodeURIComponent(del.getAttribute('data-delsub')), { method: 'DELETE' })
-          .then(reload).catch(function (err) { toast(err.message); });
+          .then(reload).catch(function (err) { toast(err.message, 'err'); });
       }
     });
 
@@ -473,7 +525,7 @@ function TaskDetailView(id) {
       var title = inp.value.trim();
       if (!title) return;
       api('/tasks/' + encodeURIComponent(id) + '/subtasks', { method: 'POST', body: { title: title } })
-        .then(reload).catch(function (err) { toast(err.message); });
+        .then(reload).catch(function (err) { toast(err.message, 'err'); });
     }
     document.getElementById('addsub').addEventListener('click', addSub);
     document.getElementById('newsub').addEventListener('keydown', function (e) {
@@ -484,11 +536,12 @@ function TaskDetailView(id) {
       if (!confirm('Delete this task and all its subtasks?')) return;
       api('/tasks/' + encodeURIComponent(id), { method: 'DELETE' })
         .then(function () { location.hash = '#/tasks'; })
-        .catch(function (e) { toast(e.message); });
+        .catch(function (e) { toast(e.message, 'err'); });
     });
   }).catch(function (e) {
     if (e.status === 404) {
-      mount(shell('tasks', '<div class="empty"><span class="big">🔍</span>Task not found.<br><a href="#/tasks">Back to tasks</a></div>'));
+      mount(shell('tasks', emptyHtml(ICONS.search, 'Task not found',
+        'This task may have been deleted.', '<a class="btn btn-ghost btn-sm" href="#/tasks">Back to tasks</a>')));
       return;
     }
     throw e;
@@ -503,23 +556,29 @@ var showArchived = false;
 
 function noteCard(n) {
   var preview = (n.content || '').length > 140 ? n.content.slice(0, 140) + '…' : (n.content || '');
-  return '<div class="note-card" data-id="' + esc(n.id) + '" style="background:' + esc(n.color || '#FFF7AE') + '">' +
-    (n.pinned ? '<span class="pin">📌</span>' : '') +
+  return '<article class="note-card" data-id="' + esc(n.id) + '" style="background:' + esc(n.color || '#FFF7AE') + '">' +
+    (n.pinned ? '<span class="pin-ribbon" aria-hidden="true">' + ICONS.pin + '</span>' : '') +
+    '<div class="note-actions">' +
+    '<button type="button" class="note-act" data-pin="' + esc(n.id) + '" data-pinned="' + (n.pinned ? '1' : '0') + '"' +
+    ' aria-label="' + (n.pinned ? 'Unpin note' : 'Pin note') + '" title="' + (n.pinned ? 'Unpin' : 'Pin') + '">' + ICONS.pin + '</button>' +
+    '<button type="button" class="note-act" data-del="' + esc(n.id) + '"' +
+    ' aria-label="Delete note" title="Delete">' + ICONS.trash + '</button>' +
+    '</div>' +
     (n.title ? '<h3>' + esc(n.title) + '</h3>' : '') +
     (preview ? '<p>' + esc(preview) + '</p>' : '') +
-    '</div>';
+    '</article>';
 }
 
 function NotesView() {
   mount(shell('notes',
     '<div class="page-head"><h2>My <span class="grad-text">Notes</span></h2></div>' +
-    '<div class="searchbar"><input id="search" type="search" placeholder="🔍 Search notes…" value="' + esc(noteSearch) + '"></div>' +
+    '<div class="searchbar">' + ICONS.search + '<input id="search" type="search" placeholder="Search notes…" value="' + esc(noteSearch) + '" aria-label="Search notes"></div>' +
     '<div class="chips">' +
     '<button class="chip' + (!showArchived ? ' active' : '') + '" data-arch="0">Notes</button>' +
     '<button class="chip' + (showArchived ? ' active' : '') + '" data-arch="1">Archived</button>' +
     '</div>' +
-    '<div class="notes-masonry" id="grid"><div class="empty">Loading…</div></div>' +
-    '<button class="fab" id="fab" aria-label="Add note">+</button>'));
+    '<div class="notes-masonry" id="grid">' + skel(6, 'skel-note') + '</div>' +
+    '<button class="fab" id="fab" aria-label="Add note">' + ICONS.plus + '</button>'));
 
   var cache = [];
 
@@ -530,7 +589,9 @@ function NotesView() {
       return !q || (n.title + ' ' + n.content).toLowerCase().indexOf(q) !== -1;
     });
     grid.innerHTML = items.length ? items.map(noteCard).join('') :
-      '<div class="empty"><span class="big">📝</span>No notes found.</div>';
+      emptyHtml(ICONS.notes, q ? 'No matches' : 'No notes yet',
+        q ? 'Try a different search term.'
+          : 'Jot down ideas, lists and reminders. They sync instantly across your devices.');
   }
 
   function load() {
@@ -552,10 +613,29 @@ function NotesView() {
     document.querySelectorAll('.chips .chip').forEach(function (c, i) {
       c.classList.toggle('active', (i === 1) === showArchived);
     });
-    load().catch(function (err) { toast(err.message); });
+    load().catch(function (err) { toast(err.message, 'err'); });
   });
 
   document.getElementById('grid').addEventListener('click', function (e) {
+    var pinBtn = e.target.closest('[data-pin]');
+    if (pinBtn) {
+      e.stopPropagation();
+      var pid = pinBtn.getAttribute('data-pin');
+      var pinned = pinBtn.getAttribute('data-pinned') === '1';
+      api('/notes/' + encodeURIComponent(pid), { method: 'PUT', body: { pinned: !pinned } })
+        .then(function () { toast(pinned ? 'Note unpinned.' : 'Note pinned to top.', 'ok'); load(); })
+        .catch(function (err) { toast(err.message, 'err'); });
+      return;
+    }
+    var delBtn = e.target.closest('[data-del]');
+    if (delBtn) {
+      e.stopPropagation();
+      if (!confirm('Delete this note?')) return;
+      api('/notes/' + encodeURIComponent(delBtn.getAttribute('data-del')), { method: 'DELETE' })
+        .then(function () { toast('Note deleted.', 'ok'); load(); })
+        .catch(function (err) { toast(err.message, 'err'); });
+      return;
+    }
     var card = e.target.closest('.note-card');
     if (card) location.hash = '#/notes/' + encodeURIComponent(card.getAttribute('data-id'));
   });
@@ -635,7 +715,7 @@ function NoteEditorView(id) {
         if (!confirm('Delete this note?')) return;
         api('/notes/' + encodeURIComponent(id), { method: 'DELETE' })
           .then(function () { location.hash = '#/notes'; })
-          .catch(function (e) { toast(e.message); });
+          .catch(function (e) { toast(e.message, 'err'); });
       });
     }
   }
@@ -645,7 +725,8 @@ function NoteEditorView(id) {
     renderForm(data.note);
   }).catch(function (e) {
     if (e.status === 404) {
-      mount(shell('notes', '<div class="empty"><span class="big">🔍</span>Note not found.<br><a href="#/notes">Back to notes</a></div>'));
+      mount(shell('notes', emptyHtml(ICONS.search, 'Note not found',
+        'This note may have been deleted.', '<a class="btn btn-ghost btn-sm" href="#/notes">Back to notes</a>')));
       return;
     }
     throw e;
@@ -663,14 +744,20 @@ function ScheduleView() {
     [7, 14, 30].map(function (d) {
       return '<button class="chip' + (d === schedDays ? ' active' : '') + '" data-d="' + d + '">Next ' + d + ' days</button>';
     }).join('') + '</div>' +
-    '<div id="list"><div class="empty">Loading…</div></div>'));
+    '<div id="list">' + skel(3, 'skel-row') + '</div>'));
+
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
 
   function load() {
     return api('/schedule/upcoming?days=' + schedDays).then(function (data) {
       var items = data.items || [];
       var list = document.getElementById('list');
       if (!items.length) {
-        list.innerHTML = '<div class="empty"><span class="big">🗓️</span>Nothing scheduled in the next ' + schedDays + ' days.</div>';
+        list.innerHTML = emptyHtml(ICONS.schedule, 'Nothing scheduled',
+          'Tasks with due dates or reminders in the next ' + schedDays + ' days will appear here, grouped by day.');
         return;
       }
       var groups = {};
@@ -678,19 +765,24 @@ function ScheduleView() {
         var key = (it.due_at || it.reminder_at || '').slice(0, 10);
         (groups[key] = groups[key] || []).push(it);
       });
-      list.innerHTML = Object.keys(groups).sort().map(function (key) {
+      var tk = todayKey();
+      list.innerHTML = '<div class="timeline">' + Object.keys(groups).sort().map(function (key) {
+        var dt = new Date(key + 'T00:00:00');
         var rows = groups[key].map(function (it) {
           var when = it.due_at || it.reminder_at;
           var overdue = isOverdue(when);
           return '<div class="task-row" data-id="' + esc(it.id) + '">' +
             '<div class="task-main"><div class="task-title">' + esc(it.title) + '</div>' +
             '<div class="task-meta">' + priorityPill(it.priority) +
-            '<span class="due' + (overdue ? ' overdue' : '') + '">⏰ ' + esc(fmtDate(when)) + '</span>' +
+            '<span class="due' + (overdue ? ' overdue' : '') + '">' + ICONS.clock + esc(fmtDate(when)) + '</span>' +
             '</div></div></div>';
         }).join('');
-        return '<div class="sched-day"><h3>' + esc(fmtDay(key + 'T00:00:00')) + '</h3>' +
-          '<div class="list">' + rows + '</div></div>';
-      }).join('');
+        return '<div class="tl-day' + (key === tk ? ' today' : '') + '">' +
+          '<div class="tl-badge"><span class="d">' + dt.getDate() + '</span>' +
+          '<span class="m">' + esc(dt.toLocaleDateString(undefined, { month: 'short' })) + '</span></div>' +
+          '<div class="tl-body"><div class="tl-date">' + esc(key === tk ? 'Today' : fmtDay(key + 'T00:00:00')) + '</div>' +
+          '<div class="list">' + rows + '</div></div></div>';
+      }).join('') + '</div>';
     });
   }
 
@@ -701,7 +793,7 @@ function ScheduleView() {
     document.querySelectorAll('#days .chip').forEach(function (c) {
       c.classList.toggle('active', parseInt(c.getAttribute('data-d'), 10) === schedDays);
     });
-    load().catch(function (err) { toast(err.message); });
+    load().catch(function (err) { toast(err.message, 'err'); });
   });
 
   document.getElementById('list').addEventListener('click', function (e) {
@@ -717,7 +809,7 @@ function ScheduleView() {
 function ProfileView() {
   mount(shell('profile',
     '<div class="page-head"><h2><span class="grad-text">Profile</span></h2></div>' +
-    '<div class="card profile-card"><div class="empty">Loading…</div></div>'));
+    '<div class="card profile-card">' + skel(3, 'skel-line') + '</div>'));
 
   return api('/auth/me').then(function (data) {
     var u = data.user;
