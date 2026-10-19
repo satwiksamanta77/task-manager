@@ -1,0 +1,1 @@
+{"compilerOptions":{"lib":["es2021"],"module":"esnext","moduleResolution":"bundler","outDir":"dist","skipLibCheck":true,"strict":true,"target":"es2021","types":["@cloudflare/workers-types"]},"include":["src"]}

@@ -1,0 +1,8 @@
+name = "taskmanager-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-25"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "taskmanager-db"
+database_id = "ca217ce6-cce9-4f18-a62e-fbb7140bd472"
