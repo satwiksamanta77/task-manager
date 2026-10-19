@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../db';
 import { first, newId, nowIso, readJson } from '../db';
-import { authMiddleware, generateSessionToken, hashPassword, sessionExpiryIso, verifyPassword } from '../auth';
+import { authMiddleware, checkRateLimit, generateSessionToken, hashPassword, sessionExpiryIso, verifyPassword } from '../auth';
 
 interface UserRow {
   id: string;
@@ -44,11 +44,16 @@ publicAuthRoutes.post('/register', async (c) => {
   if (typeof email !== 'string' || !EMAIL_RE.test(email.trim())) {
     return c.json({ error: 'Invalid email address' }, 400);
   }
-  if (typeof password !== 'string' || password.length < 6) {
-    return c.json({ error: 'Password must be at least 6 characters' }, 400);
+  if (typeof password !== 'string' || password.length < 6 || password.length > 128) {
+    return c.json({ error: 'Password must be between 6 and 128 characters' }, 400);
   }
   if (typeof name !== 'string' || name.trim().length === 0) {
     return c.json({ error: 'Name is required' }, 400);
+  }
+
+  const ip = c.req.header('CF-Connecting-IP') ?? 'unknown';
+  if (!(await checkRateLimit(c.env.DB, `register:${ip}`, 10, 900))) {
+    return c.json({ error: 'Too many attempts, try again later' }, 429);
   }
 
   const normalizedEmail = email.trim().toLowerCase();
@@ -75,8 +80,12 @@ publicAuthRoutes.post('/login', async (c) => {
   if (!parsed.ok) return c.json({ error: 'Invalid JSON body' }, 400);
   const { email, password } = parsed.body;
 
-  if (typeof email !== 'string' || typeof password !== 'string') {
+  if (typeof email !== 'string' || typeof password !== 'string' || password.length > 128) {
     return c.json({ error: 'Invalid email or password' }, 401);
+  }
+  const ip = c.req.header('CF-Connecting-IP') ?? 'unknown';
+  if (!(await checkRateLimit(c.env.DB, `login:${ip}`, 20, 900))) {
+    return c.json({ error: 'Too many attempts, try again later' }, 429);
   }
   const row = await first<UserRow>(
     c.env.DB,

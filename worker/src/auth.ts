@@ -64,6 +64,34 @@ export function sessionExpiryIso(): string {
   return new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 }
 
+/** Fixed-window rate limiter backed by D1. Returns true when the attempt is allowed. */
+export async function checkRateLimit(
+  db: D1Database,
+  key: string,
+  maxAttempts: number,
+  windowSecs: number
+): Promise<boolean> {
+  const nowMs = Date.now();
+  const row = await db
+    .prepare('SELECT count, window_start FROM rate_limits WHERE key = ?')
+    .bind(key)
+    .first<{ count: number; window_start: string }>();
+  const nowIsoStr = new Date(nowMs).toISOString();
+  if (!row || nowMs - Date.parse(row.window_start) > windowSecs * 1000) {
+    await db
+      .prepare(
+        'INSERT INTO rate_limits (key, count, window_start) VALUES (?, 1, ?) ' +
+          'ON CONFLICT(key) DO UPDATE SET count = 1, window_start = excluded.window_start'
+      )
+      .bind(key, nowIsoStr)
+      .run();
+    return true;
+  }
+  if (row.count >= maxAttempts) return false;
+  await db.prepare('UPDATE rate_limits SET count = count + 1 WHERE key = ?').bind(key).run();
+  return true;
+}
+
 /** Require a valid, unexpired Bearer session token. Sets `userId` on the context. */
 export const authMiddleware: MiddlewareHandler<{ Bindings: Env; Variables: { userId: string } }> = async (
   c,

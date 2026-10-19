@@ -1,33 +1,46 @@
 package com.taskmanager.app.data.local
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
-private val Context.sessionDataStore by preferencesDataStore("session")
+/**
+ * Holds the auth token in EncryptedSharedPreferences (AES256-SIV for keys,
+ * AES256-GCM for values), so it is never stored in cleartext on the device.
+ */
+class SessionManager(context: Context) {
 
-class SessionManager(private val context: Context) {
-
-    private companion object {
-        val TOKEN_KEY = stringPreferencesKey("auth_token")
+    private val prefs: SharedPreferences = run {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            "session_enc",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
-    val tokenFlow: Flow<String?> = context.sessionDataStore.data.map { prefs ->
-        prefs[TOKEN_KEY]
-    }
+    private val _tokenFlow = MutableStateFlow(prefs.getString(TOKEN_KEY, null))
+    val tokenFlow: Flow<String?> = _tokenFlow.asStateFlow()
 
     suspend fun saveToken(token: String) {
-        context.sessionDataStore.edit { prefs ->
-            prefs[TOKEN_KEY] = token
-        }
+        prefs.edit().putString(TOKEN_KEY, token).apply()
+        _tokenFlow.value = token
     }
 
     suspend fun clearToken() {
-        context.sessionDataStore.edit { prefs ->
-            prefs.remove(TOKEN_KEY)
-        }
+        prefs.edit().remove(TOKEN_KEY).apply()
+        _tokenFlow.value = null
+    }
+
+    private companion object {
+        const val TOKEN_KEY = "auth_token"
     }
 }

@@ -36,7 +36,8 @@ class NoteEditorViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(loading = true, error = null)
             try {
-                val note = repo.getNote(noteId!!)
+                val id = checkNotNull(noteId) { "noteId is required to load a note" }
+                val note = repo.getNote(id)
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     title = note.title,
@@ -73,7 +74,7 @@ class NoteEditorViewModel(
                     )
                 } else {
                     repo.updateNote(
-                        noteId!!,
+                        checkNotNull(noteId) { "noteId is required to update a note" },
                         UpdateNoteRequest(
                             title = state.title,
                             content = state.content,

@@ -35,7 +35,8 @@ class AddEditTaskViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(loading = true, error = null)
             try {
-                val task = repo.getTask(taskId!!)
+                val id = checkNotNull(taskId) { "taskId is required to load a task" }
+                val task = repo.getTask(id)
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     title = task.title,
@@ -75,7 +76,7 @@ class AddEditTaskViewModel(
                     )
                 } else {
                     repo.updateTask(
-                        taskId!!,
+                        checkNotNull(taskId) { "taskId is required to update a task" },
                         UpdateTaskRequest(
                             title = state.title.trim(),
                             description = state.description.trim(),
