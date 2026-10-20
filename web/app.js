@@ -405,7 +405,7 @@ var taskFilter = 'all';
 
 /* ---------------- projects, labels, recurrence (contract v2) ---------------- */
 
-var COLOR_SWATCHES = ['#8B7CFF', '#67E8F9', '#34D399', '#FBBF24', '#F87171', '#FBBC04', '#D7AEFB', '#F28B82', '#9AA3B2'];
+var COLOR_SWATCHES = ['#58A6FF', '#3FB950', '#D29922', '#F85149', '#818CF8', '#DB61A2', '#F0883E', '#A371F7'];
 var RECURRENCE = [
   { id: 'none', label: 'None' },
   { id: 'daily', label: 'Daily' },
@@ -434,13 +434,13 @@ function projectById(pid) {
 function projectChip(pid) {
   var p = projectById(pid);
   if (!p) return '';
-  return '<span class="proj-chip"><span class="ld" style="background:' + esc(p.color || '#8B7CFF') + '"></span>' + esc(p.name) + '</span>';
+  return '<span class="proj-chip"><span class="ld" style="background:' + esc(p.color || '#58A6FF') + '"></span>' + esc(p.name) + '</span>';
 }
 function labelPills(labels) {
   labels = labels || [];
   if (!labels.length) return '';
   return '<span class="label-pills">' + labels.map(function (l) {
-    return '<span class="label-pill"><span class="ld" style="background:' + esc(l.color || '#9AA3B2') + '"></span>' + esc(l.name) + '</span>';
+    return '<span class="label-pill"><span class="ld" style="background:' + esc(l.color || '#7D8590') + '"></span>' + esc(l.name) + '</span>';
   }).join('') + '</span>';
 }
 function recurBadge(r) {
@@ -454,7 +454,7 @@ function labelChipsHtml(selected, prefix) {
   return '<div class="mchips" id="' + prefix + '-lchips">' +
     ls.map(function (l) {
       return '<button type="button" class="mchip' + (selected[l.id] ? ' selected' : '') + '" data-lid="' + esc(l.id) + '">' +
-        '<span class="ld" style="background:' + esc(l.color || '#9AA3B2') + '"></span>' + esc(l.name) + '</button>';
+        '<span class="ld" style="background:' + esc(l.color || '#7D8590') + '"></span>' + esc(l.name) + '</button>';
     }).join('') +
     (ls.length ? '' : '<span class="hint">No labels yet — create some in Projects.</span>') +
     '</div>';
@@ -560,7 +560,7 @@ function TasksView() {
         '<button type="button" class="mchip' + (!taskLabelFilter ? ' selected' : '') + '" data-lid="">All</button>' +
         labelsCache.map(function (l) {
           return '<button type="button" class="mchip' + (l.id === taskLabelFilter ? ' selected' : '') + '" data-lid="' + esc(l.id) + '">' +
-            '<span class="ld" style="background:' + esc(l.color || '#9AA3B2') + '"></span>' + esc(l.name) + '</button>';
+            '<span class="ld" style="background:' + esc(l.color || '#7D8590') + '"></span>' + esc(l.name) + '</button>';
         }).join('') + '</div>';
     }
     fb.innerHTML = html;
@@ -910,7 +910,7 @@ function NotesView() {
       '<button type="button" class="mchip' + (!noteLabelFilter ? ' selected' : '') + '" data-lid="">All</button>' +
       labelsCache.map(function (l) {
         return '<button type="button" class="mchip' + (l.id === noteLabelFilter ? ' selected' : '') + '" data-lid="' + esc(l.id) + '">' +
-          '<span class="ld" style="background:' + esc(l.color || '#9AA3B2') + '"></span>' + esc(l.name) + '</button>';
+          '<span class="ld" style="background:' + esc(l.color || '#7D8590') + '"></span>' + esc(l.name) + '</button>';
       }).join('') + '</div>';
     fb.querySelector('.mchips').addEventListener('click', function (e) {
       var b = e.target.closest('[data-lid]');
@@ -1029,7 +1029,7 @@ function ProjectsView() {
         '<button type="button" class="btn btn-primary btn-sm" id="epsave">Save</button></div></div></div>';
     }
     return '<div class="proj-row">' +
-      '<span class="proj-dot" style="background:' + esc(p.color || '#8B7CFF') + '"></span>' +
+      '<span class="proj-dot" style="background:' + esc(p.color || '#58A6FF') + '"></span>' +
       '<span class="proj-name" data-goto-proj="' + esc(p.id) + '" title="Show its tasks">' + esc(p.name) + '</span>' +
       '<span class="pill pill-neutral">' + (counts[p.id] || 0) + ' tasks</span>' +
       '<button type="button" class="icon-btn" data-pedit="' + esc(p.id) + '" aria-label="Edit project" title="Edit">' + ICONS.edit + '</button>' +
@@ -1045,7 +1045,7 @@ function ProjectsView() {
         '<button type="button" class="btn btn-primary btn-sm" id="elsave">Save</button></div></div></div>';
     }
     return '<div class="proj-row">' +
-      '<span class="proj-dot" style="background:' + esc(l.color || '#9AA3B2') + '"></span>' +
+      '<span class="proj-dot" style="background:' + esc(l.color || '#7D8590') + '"></span>' +
       '<span class="proj-name">' + esc(l.name) + '</span>' +
       '<button type="button" class="icon-btn" data-ledit="' + esc(l.id) + '" aria-label="Rename label" title="Rename">' + ICONS.edit + '</button>' +
       '<button type="button" class="icon-btn" data-ldel="' + esc(l.id) + '" aria-label="Delete label" title="Delete">' + ICONS.trash + '</button></div>';

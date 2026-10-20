@@ -69,7 +69,7 @@ import com.taskmanager.app.ui.theme.Text
 import com.taskmanager.app.ui.theme.soft
 import com.taskmanager.app.ui.util.isOverdueDate
 
-/** Subtle gradient-mesh backdrop: two soft iris glows on the dark base. */
+/** Subtle gradient-mesh backdrop: two soft blue glows on the dark base. */
 @Composable
 fun MeshBackground(modifier: Modifier = Modifier) {
     Box(modifier = modifier.background(Bg)) {
@@ -90,7 +90,7 @@ fun MeshBackground(modifier: Modifier = Modifier) {
     }
 }
 
-/** Rounded-square brand mark with an iris gradient and a check. */
+/** Rounded-square brand mark with a blue gradient and a check. */
 @Composable
 fun LogoMark(size: Dp = 64.dp, iconSize: Dp = 32.dp) {
     Box(
@@ -109,7 +109,7 @@ fun LogoMark(size: Dp = 64.dp, iconSize: Dp = 32.dp) {
     }
 }
 
-/** Consistent app bar: back affordance, Poppins title, optional subtitle and actions. */
+/** Consistent app bar: back affordance, Inter title, optional subtitle and actions. */
 @Composable
 fun PremiumTopBar(
     title: String,

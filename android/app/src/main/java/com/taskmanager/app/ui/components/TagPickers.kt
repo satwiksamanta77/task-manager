@@ -55,8 +55,8 @@ import com.taskmanager.app.ui.theme.soft
 
 /** Swatch palette for projects and labels (hex strings). */
 val TagColorPalette = listOf(
-    "#8B7CFF", "#67E8F9", "#34D399", "#FBBF24", "#F87171",
-    "#F472B6", "#FB923C", "#A3E635", "#38BDF8", "#C084FC"
+    "#58A6FF", "#3FB950", "#D29922", "#F85149",
+    "#818CF8", "#DB61A2", "#F0883E", "#A371F7"
 )
 
 /** Small pill showing a label name with its color dot. */

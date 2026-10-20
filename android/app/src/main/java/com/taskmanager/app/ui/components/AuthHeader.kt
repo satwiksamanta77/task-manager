@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.taskmanager.app.ui.theme.Dim
 import com.taskmanager.app.ui.theme.Text
 
-/** Brand hero shown above the auth card: logo, Poppins wordmark, tagline. */
+/** Brand hero shown above the auth card: logo, Inter wordmark, tagline. */
 @Composable
 fun AuthHero(title: String, subtitle: String) {
     Column(

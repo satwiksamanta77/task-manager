@@ -222,7 +222,7 @@ fun NoteEditorScreen(
             state.error?.let { error ->
                 Text(
                     text = error,
-                    color = Color(0xFFB3261E),
+                    color = Danger,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
             }
